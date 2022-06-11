@@ -1,0 +1,7 @@
+
+C:\Users\Wilson Mielke\Desktop\Compilador\trabalho_Compilador\CompilerWorks>java org.antlr.v4.gui.TestRig PseudoCodeCompiler start inputCode.txt 
+public class Saida{ 
+	public static void main(String args[]){
+		asdzxccvb=3,3;	
+	}
+}

@@ -1,3 +1,14 @@
 inicio
-asdzxccvb = 3,3;
+boleano teste = verdadeiro;
+se(teste==verdadeiro){
+teste = verdadeiro;
+}senao se(teste==falso){
+teste = falso;
+}
+enquanto(teste!=verdadeiro){
+teste = verdadeiro;
+}
+teste = falso;
+ler(texto);
+imprimir("hello word");
 fim
