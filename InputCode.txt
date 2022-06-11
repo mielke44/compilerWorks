@@ -1,0 +1,3 @@
+inicio
+asdzxccvb = 3,3;
+fim
