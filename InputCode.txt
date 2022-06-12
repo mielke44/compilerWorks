@@ -1,24 +1,7 @@
 inicio
-
-real teste = 3.4;
-boleano teste2 = verdadeiro;
-texto teste3 = "testes";
-
-se(teste2 == verdadeiro){
-	teste2=falso;
-}senao se(teste == 3.4){
-	teste = 4.5;
-}
-
-enquanto(teste3 == "testes"){
-	teste = teste++;
-	se(teste>=10){
-		teste3 = ler(texto);
-		imprimir(teste3+"foi teste");
-	}
-}
-
-para( real iterador = 0;iterador<=10;iterador++){
-	teste = (teste+teste)-teste;
+texto 
+ texto teste = "a";
+para( real iterador = 3; iterador == 3; iterador++){
+	3
 }
 fim

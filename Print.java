@@ -9,7 +9,7 @@ public class Print{
 	}
 	
 	public void printEnd(){
-		System.out.print("\n\t}\n}");
+		System.out.print("\t}\n}");
 	}
 	
 	public void printDeclare(String type, String id, String content){
@@ -37,10 +37,11 @@ public class Print{
 	}
 	
 	public void printSC(){
-		System.out.print(";\n");
+		System.out.print(";");
 	}
 	
 	public void printScopeTabs(int scope){
+		//System.out.print("Scope:"+scope);
 		for(int i=1;i<scope;i++)System.out.print("\t");
 	}
 	
@@ -53,6 +54,6 @@ public class Print{
 	}
 	
 	public void printCondition(String ID, String OP, String SP){
-		System.out.print("( "+ID+" "+OP+" "+SP+" )");
+		System.out.print(ID+" "+OP+" "+SP);
 	}
 }

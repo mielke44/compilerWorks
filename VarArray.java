@@ -9,8 +9,8 @@ public class VarArray{
 		this.v = new ArrayList<Variable>();
 	}
 	
-	public void addVar(Variable nv){
-		if(varExists(nv.id, nv.scope)) throw new RuntimeException("Variavel ja foi declarada nesse escopo");
+	public void addVar(Variable nv, int line){
+		if(varExists(nv.id, nv.scope)) throw new RuntimeException("Variavel ja foi declarada nesse escopo; linha: "+line);
 		else this.v.add(nv);
 		//printArray();
 	}
@@ -27,7 +27,7 @@ public class VarArray{
 			if(va.id.equals(id))
 				return va;
 		}
-		throw new RuntimeException("Variavel com id nao existente");
+		throw new RuntimeException("Variavel com id: "+id+" nao existente");
 	}
 	
 	public Boolean checkScope(String id, int scope){
@@ -59,14 +59,14 @@ public class VarArray{
 		}
 	}
 	
-	public void atribVar(String id, String content, int scope){
+	public void atribVar(String id, String content, int scope, int line){
 		if(!checkContentTypebyId(id,content)){
-			throw new RuntimeException("Atribuicao invalida! Motivo: Tipo do conteudo invalido");
+			throw new RuntimeException("Atribuicao invalida! Motivo: Tipo do conteudo invalido na linha:"+line);
 		}else if(!checkScope(id, scope)){
-			throw new RuntimeException("Atribuicao invalida! Motivo: Variavel nao encontrada neste escopo");
+			throw new RuntimeException("Atribuicao invalida! Motivo: Variavel nao encontrada neste escopo na linha:"+line);
 		}else {
 			getVarById(id).content = content;
-			printArray();
+			//printArray();
 		}
 	}
 	

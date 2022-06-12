@@ -10,17 +10,18 @@ grammar PseudoCodeCompiler;
 	public void finishStruct(){
 		v.removeScope(scope);
 		scope--;
+		x.printData("\n");
 		x.printScopeTabs(scope);
-		x.printData("} scope:"+scope+"\n");
+		x.printData("}\n ");
 	}
 	
 	public void startStruct(){
 		scope++;
-		x.printData("{ scope:"+scope+"\n");
+		x.printData("{ \n");
 	}
 	
-	public void throwError(String message){
-		throw new RuntimeException(" "+message);
+	public void throwError(String message, int line){
+		throw new RuntimeException(" "+message+" na linha: "+line);
 	}
 }
 
@@ -31,109 +32,110 @@ start:
 		'fim' {x.printEnd();};
 		
 command:  
-		(op | atribution | declaration | conditional | whileLoop | forLoop | write)*;
+		({x.printScopeTabs(scope);} atribution {x.printData("\n");} | {x.printScopeTabs(scope);} declaration {x.printData("\n");}| conditional | whileLoop | forLoop | write)*;
 		
 whileLoop:
-		'enquanto' {x.printScopeTabs(scope);x.printData("while");} condition '{' {startStruct();}
+		'enquanto''(' {x.printScopeTabs(scope);x.printData("while(");}  condition ')'{x.printData(")");} '{' {startStruct();}
 		command 
 		'}'{finishStruct();};
 		
 forLoop: 
-		'para' {x.printScopeTabs(scope);x.printData("for(");scope++;}
-		'('
-		declaration SC{x.printData(";");}
+		'para''('{x.printScopeTabs(scope);x.printData("for(");scope++;}
+		declaration
 		condition SC{x.printData(";");}
-		op
-		')''{'
+		op {x.printData($op.text);}
+		')''{' {x.printData("){\n");}
 		command
 		'}'{finishStruct();};
 		
 conditional:
-		if {x.printScopeTabs(scope);x.printData("if");} condition (OP_AD {x.printData($OP_AD.text);} condition)* {startStruct();}'{'
+		if {x.printScopeTabs(scope);x.printData("if(");} '(' condition ')'{x.printData(")");} {startStruct();}'{'?
 		command
-		'}' {v.removeScope(scope);scope--;x.printScopeTabs(scope);}
-		(else {x.printData("}else");}(if {x.printData(" if");} condition (OP_AD{x.printData($OP_AD.text);} condition)*)? {startStruct();}'{'
+		'}'?
+		(else {scope--;x.printScopeTabs(scope);x.printData("}else ");}(if{x.printData("if(");} '(' condition ')'{x.printData("(");} )? {startStruct();}'{'?
 		command
-		'}')?{finishStruct();};
+		'}'?)? {finishStruct();};
 
 atribution:
-		{x.printScopeTabs(scope);}
 		ID
 		ATRIB
-		data{
-				v.atribVar($ID.text,$data.text, scope);
+		(data{
+				v.atribVar($ID.text,$data.text, scope, $data.start.getLine());
 				x.printAttribution($ID.text,$data.text);
 			}
+		| {x.printAttribution($ID.text,"");} read{
+				v.atribVar($ID.text,$read.text, scope, $read.start.getLine());
+		})
 		SC{x.printSC();}; 
 		
 declaration:
-		{x.printScopeTabs(scope);}
 		type ID 
 		ATRIB data {
 						if(v.parseData($data.text).equals($type.text)){
-							v.addVar(new Variable($type.text,$data.text,scope, $ID.text));
+							v.addVar(new Variable($type.text,$data.text,scope, $ID.text), $data.start.getLine());
 							x.printDeclare($type.text, $ID.text, $data.text); 
 						}else{
-							throwError("Valor declarado nao corresponde ao tipo da variavel");
+							throwError("Valor declarado nao corresponde ao tipo da variavel", $data.start.getLine());
 						}
 					}
-		SC{ x.printSC(); };
+		SC{ x.printSC();};
 		
 data:
-		read|
 		bool|
-		op| 
-		| ('('{x.printData("(");} op ')'{x.printData(")");}) basicOp?
+		| (('(')? op (')')? basicOp?)
 		|STRING;
 		
 condition:
-		'(' 
-		ID {if(!v.varExists($ID.text,scope))throwError("Variavel nao existente nesse escopo");}
+		ID {if(!v.varExists($ID.text,scope))throwError("Variavel nao existente nesse escopo", $ID.getLine());}
 		OP_COMP data {
-						if(v.parseData($data.text).equals(v.getVarById($ID.text).type)){
+						if(($OP_COMP.text.contains("<") || $OP_COMP.text.contains(">")) && v.parseData($data.text).equals("texto")){
+							throwError("Texto nao pode ser comparado com '<' ou '>'", $data.start.getLine());
+						}else if(v.parseData($data.text).equals(v.getVarById($ID.text).type)){
 							x.printCondition($ID.text,$OP_COMP.text,$data.text);
 						}else{
-							throwError($data.text+" nao pode ser comparado com "+v.getVarById($ID.text).type);
+							throwError($data.text+" nao pode ser comparado com "+v.getVarById($ID.text).type, $data.start.getLine());
 						}						
 					}
-		')';
+		(OP_AD {x.printData($OP_AD.text);} condition)*;
 		
 op:
-		{x.printScopeTabs(scope);}
 		NUM
 		| ID{
 			if(!v.varExists($ID.text,scope))
-				throwError("Variavel:"+$ID.text+" nao existente nesse escopo: "+scope);
+				throwError("Variavel"+$ID.text+" nao existente no escopo que foi chamada", $ID.getLine());
 			}
-		basicOp?;
+		(basicOp {
+			if(!v.getVarById($ID.text).type.contains("real")) 
+				throwError("variavel "+$ID.text+" nao corresponde a numero", $ID.getLine());
+		} )?;
 
 basicOp:
-		('/'|'*') op
-		| ('+'|'-') op
+		('/'|'*') (op|data)
+		| ('+'|'-') (op|data)
 		| ('++'|'--');
 
 read:
 		'ler' '(' 
 		type{
-				switch($type.text){
-					case "texto":
-						x.printData("s.nextLine()");
-						break;
-					case "boleano":
-						x.printData("s.nextBoolean()");
-						break;
-					case "real":
-						x.printData("s.nextFloat()");
-						break;
-				}
+			switch($type.text){
+				case "texto":
+					x.printData("s.nextLine()");
+					break;
+				case "boleano":
+					x.printData("s.nextBoolean()");
+					break;
+				case "real":
+					x.printData("s.nextFloat()");
+					break;
 			}
+		}
 		')';
 
 write: 
 		{x.printScopeTabs(scope);} 
 		'imprimir' '(' {System.out.print("System.out.print(");}
-		(ID {x.printData(v.getVarById($ID.text).content);} | STRING {x.printData($STRING.text);})
-		('+' {x.printData("+");} ID {x.printData(v.getVarById($ID.text).content);} | STRING {x.printData($STRING.text);})* 
+		(ID {x.printData(v.getVarById($ID.text).id);} | STRING {x.printData($STRING.text);})
+		('+' {x.printData("+");} (ID {x.printData(v.getVarById($ID.text).id);} | STRING {x.printData($STRING.text);}))* 
 		')' SC{x.printData(")");x.printSC();};
 		
 type: 
@@ -146,11 +148,18 @@ if:
 else:  	
 		'senao'|'Senao';
 
-STRING: '"' ([a-z]|[A-Z]|NUM|WS|OP_COMP|ATRIB|SC|OP_AD)* '"'; 
-ID: [a-z]([a-z]|[A-Z]|[0-9])+;
-NUM: [0-9]+ ('.' [0-9]*)?;
-OP_COMP: '<'|'>'|'=='|'<='|'>='|'!=';
-OP_AD: '&&'|'||';
-ATRIB: '=';
-SC: ';';
+STRING
+	:'"' ([a-z]|[A-Z]|NUM|WS|OP_COMP|ATRIB|SC|OP_AD)* '"'; 
+ID
+	:[a-z]([a-z]|[A-Z]|[0-9]|'_')*;
+NUM
+	:[0-9]+ ('.' [0-9]*)?;
+OP_COMP 
+	:'<'|'>'|'=='|'<='|'>='|'!=';
+OP_AD
+	:'&&'|'||';
+ATRIB 
+	:'=';
+SC
+	:';';
 WS: [ \t\r\n]+ -> skip;

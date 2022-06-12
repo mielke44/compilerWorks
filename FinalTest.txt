@@ -1,8 +1,8 @@
 inicio
 
-real teste = 3.4;
+real teste = 3;
 boleano teste2 = verdadeiro;
-texto Teste3 = "testes";
+texto teste3 = "testes";
 
 se(teste2 == verdadeiro){
 	teste2=falso;
@@ -10,15 +10,17 @@ se(teste2 == verdadeiro){
 	teste = 4.5;
 }
 
-enquanto(Teste3 == "testes"){
+enquanto(teste3 == "testes"){
 	teste = teste++;
 	se(teste>=10){
-		Teste3 = ler(texto);
-		imprimir(Teste3+"foi teste");
+		teste3 = ler(texto);
+		imprimir(teste3+"foi teste"+teste);
 	}
 }
 
 para( real iterador = 0;iterador<=10;iterador++){
-	teste = (teste+teste)-teste;
+	real teste4 = 2.3;
+	teste4 = teste+teste4*(teste-teste4)/teste;
+	teste = (teste4+teste)*teste;
 }
 fim
