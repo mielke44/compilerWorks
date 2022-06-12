@@ -2,7 +2,7 @@ inicio
 
 real teste = 3.4;
 boleano teste2 = verdadeiro;
-texto teste3 = "testes";
+texto Teste3 = "testes";
 
 se(teste2 == verdadeiro){
 	teste2=falso;
@@ -10,11 +10,11 @@ se(teste2 == verdadeiro){
 	teste = 4.5;
 }
 
-enquanto(teste3 == "testes"){
+enquanto(Teste3 == "testes"){
 	teste = teste++;
 	se(teste>=10){
-		teste3 = ler(texto);
-		imprimir(teste3+"foi teste");
+		Teste3 = ler(texto);
+		imprimir(Teste3+"foi teste");
 	}
 }
 

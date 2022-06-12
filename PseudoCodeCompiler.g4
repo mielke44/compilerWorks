@@ -6,78 +6,111 @@ grammar PseudoCodeCompiler;
 	VarArray v = new VarArray();
 	Scanner s = new Scanner(System.in);
 	int scope = 3;
+	
+	public void finishStruct(){
+		v.removeScope(scope);
+		scope--;
+		x.printScopeTabs(scope);
+		x.printData("} scope:"+scope+"\n");
+	}
+	
+	public void startStruct(){
+		scope++;
+		x.printData("{ scope:"+scope+"\n");
+	}
+	
+	public void throwError(String message){
+		throw new RuntimeException(" "+message);
+	}
 }
 
 
 start: 	
-		'inicio' {x.printStart();} 
+		'inicio' {x.printStart();}
 		command
 		'fim' {x.printEnd();};
 		
 command:  
-		(atribution | declare | conditional | whileLoop | forLoop | read | write | aritOperation)*;
+		(op | atribution | declaration | conditional | whileLoop | forLoop | write)*;
 		
 whileLoop:
-		'enquanto' {x.printData("while");} condition '{' {x.printData("{\n\t");scope++;}
-		command
-		'}'{x.printData("}\n");scope--;};
+		'enquanto' {x.printScopeTabs(scope);x.printData("while");} condition '{' {startStruct();}
+		command 
+		'}'{finishStruct();};
 		
 forLoop: 
-		'para' {x.printData("for("+$ID.text+$ATRIB.text);}
+		'para' {x.printScopeTabs(scope);x.printData("for(");scope++;}
 		'('
-		ID ATRIB (ID{x.printData($ID.text);}|NUM{x.printData($NUM.text);}) SC{x.printData(";");}
+		declaration SC{x.printData(";");}
 		condition SC{x.printData(";");}
-		ID {x.printData($ID.text);}(OP_ALG NUM{x.printData($OP_ALG.text+NUM+"){");scope++;})|OP_UNIT{x.printData($OP_UNIT+"){\n\t");scope++;}
+		op
 		')''{'
 		command
-		{x.printData("}\n");scope--;}'}';
+		'}'{finishStruct();};
 		
 conditional:
-		if {x.printData("if");} condition (OP_AD {x.printData($OP_AD.text);} condition)* {x.printData("{\n\t");scope++;}'{'
+		if {x.printScopeTabs(scope);x.printData("if");} condition (OP_AD {x.printData($OP_AD.text);} condition)* {startStruct();}'{'
 		command
-		{x.printData("}\n");scope--;}'}' (else {x.printData(" else");}(if {x.printData(" if");}condition (OP_AD{x.printData($OP_AD.text);} condition)*)? {x.printData("{\n\t");scope++;}'{'
+		'}' {v.removeScope(scope);scope--;x.printScopeTabs(scope);}
+		(else {x.printData("}else");}(if {x.printData(" if");} condition (OP_AD{x.printData($OP_AD.text);} condition)*)? {startStruct();}'{'
 		command
-		{x.printData("}\n");scope--;}'}')?;
+		'}')?{finishStruct();};
 
 atribution:
+		{x.printScopeTabs(scope);}
 		ID
 		ATRIB
-		data {
-				if(true){
-					/*v.atribVar($ID.text,$data.text);*/
-					x.printAttribution($ID.text,$data.text);
-				}else{
-					throw new RuntimeException("Tipo invalido");
-				}
+		data{
+				v.atribVar($ID.text,$data.text, scope);
+				x.printAttribution($ID.text,$data.text);
 			}
-		SC{x.printSC(scope);}; 
+		SC{x.printSC();}; 
 		
-declare:
+declaration:
+		{x.printScopeTabs(scope);}
 		type ID 
 		ATRIB data {
-						v.addVar(new Variable($type.text,$data.text,scope, $ID.text));
-						x.printDeclare($type.text, $ID.text, $data.text); 
+						if(v.parseData($data.text).equals($type.text)){
+							v.addVar(new Variable($type.text,$data.text,scope, $ID.text));
+							x.printDeclare($type.text, $ID.text, $data.text); 
+						}else{
+							throwError("Valor declarado nao corresponde ao tipo da variavel");
+						}
 					}
-		SC{ x.printSC(scope); };
+		SC{ x.printSC(); };
 		
 data:
 		read|
-		aritOperation|
 		bool|
-		NUM|
-		ID|
-		STRING;
+		op| 
+		| ('('{x.printData("(");} op ')'{x.printData(")");}) basicOp?
+		|STRING;
 		
 condition:
 		'(' 
-		ID
-		OP_COMP data {x.printCondition($ID.text,$OP_COMP.text,$data.text);}
+		ID {if(!v.varExists($ID.text,scope))throwError("Variavel nao existente nesse escopo");}
+		OP_COMP data {
+						if(v.parseData($data.text).equals(v.getVarById($ID.text).type)){
+							x.printCondition($ID.text,$OP_COMP.text,$data.text);
+						}else{
+							throwError($data.text+" nao pode ser comparado com "+v.getVarById($ID.text).type);
+						}						
+					}
 		')';
 		
-aritOperation:
-		ID|NUM 
-		(OP_ALG ID|NUM) | 
-		OP_UNIT SC {x.printAritOp();};
+op:
+		{x.printScopeTabs(scope);}
+		NUM
+		| ID{
+			if(!v.varExists($ID.text,scope))
+				throwError("Variavel:"+$ID.text+" nao existente nesse escopo: "+scope);
+			}
+		basicOp?;
+
+basicOp:
+		('/'|'*') op
+		| ('+'|'-') op
+		| ('++'|'--');
 
 read:
 		'ler' '(' 
@@ -94,30 +127,28 @@ read:
 						break;
 				}
 			}
-		')' 
-		SC {x.printSC(scope);};
+		')';
 
 write: 
+		{x.printScopeTabs(scope);} 
 		'imprimir' '(' {System.out.print("System.out.print(");}
-		(ID {x.printData(v.getVar($ID.text).content);} | STRING {x.printData($STRING.text);})
-		('+' {x.printData("+");} ID {x.printData(v.getVar($ID.text).content);} | STRING {x.printData($STRING.text);})* 
-		')' SC{x.printData(")");x.printSC(scope);};
+		(ID {x.printData(v.getVarById($ID.text).content);} | STRING {x.printData($STRING.text);})
+		('+' {x.printData("+");} ID {x.printData(v.getVarById($ID.text).content);} | STRING {x.printData($STRING.text);})* 
+		')' SC{x.printData(")");x.printSC();};
 		
 type: 
 		'boleano'|'texto'|'real';
 		
 bool: 	
-		'verdadeiro'|'falso'|'0'|'1';
+		'verdadeiro'|'falso';
 if: 
 		'Se'|'se';
 else:  	
-		('senao'|'senão'|'Senao'|'Senão');
+		'senao'|'Senao';
 
-STRING: '"' ([a-z]|[A-Z]|NUM|WS|OP_ALG|OP_UNIT|OP_COMP|ATRIB|SC|OP_AD)* '"'; 
-ID: ([a-z]|[A-Z]|[0-9])+;
-NUM: [0-9]+ (',' [0-9]*)?;
-OP_ALG: '+'|'-'|'/'|'*'|'**'|'^';
-OP_UNIT: '++'|'--';
+STRING: '"' ([a-z]|[A-Z]|NUM|WS|OP_COMP|ATRIB|SC|OP_AD)* '"'; 
+ID: [a-z]([a-z]|[A-Z]|[0-9])+;
+NUM: [0-9]+ ('.' [0-9]*)?;
 OP_COMP: '<'|'>'|'=='|'<='|'>='|'!=';
 OP_AD: '&&'|'||';
 ATRIB: '=';

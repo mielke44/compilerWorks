@@ -13,7 +13,15 @@ public class Print{
 	}
 	
 	public void printDeclare(String type, String id, String content){
-		System.out.print(type+" "+id+" = "+content);
+		System.out.print(parseType(type)+" "+id+" = "+content);
+	}
+	
+	public String parseType(String type){
+		 switch(type){
+			case "texto": return "String";
+			case "boleano": return "Boolean";
+			default: return "float";
+		}
 	}
 	
 	public void printAttribution(String id, String content){
@@ -28,8 +36,11 @@ public class Print{
 		System.out.print("ARIT_OP");
 	}
 	
-	public void printSC(int scope){
+	public void printSC(){
 		System.out.print(";\n");
+	}
+	
+	public void printScopeTabs(int scope){
 		for(int i=1;i<scope;i++)System.out.print("\t");
 	}
 	
