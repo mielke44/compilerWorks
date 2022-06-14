@@ -13,7 +13,10 @@ public class Print{
 	}
 	
 	public void printDeclare(String type, String id, String content){
-		System.out.print(parseType(type)+" "+id+" = "+content);
+		if(content.equals("verdadeiro") || content.equals("falso"))
+			System.out.print(parseType(type)+" "+id+" = "+parseBool(content));
+		else 
+			System.out.print(parseType(type)+" "+id+" = "+content);
 	}
 	
 	public String parseType(String type){
@@ -25,7 +28,10 @@ public class Print{
 	}
 	
 	public void printAttribution(String id, String content){
-		System.out.print(id+" = "+content);
+		if(content.equals("verdadeiro") || content.equals("falso"))
+			System.out.print(id+" = "+parseBool(content));
+		else
+			System.out.print(id+" = "+content);
 	}
 	
 	public void printData(String x){
@@ -45,15 +51,14 @@ public class Print{
 		for(int i=1;i<scope;i++)System.out.print("\t");
 	}
 	
-	public void printBool(String x){
-		if(x.equals("verdadeiro")||x.equals("1")){
-			System.out.print("teste");
-		}else{
-			System.out.print(false);
-		}
+	public Boolean parseBool(String x){
+		return x.equals("verdadeiro");
 	}
 	
 	public void printCondition(String ID, String OP, String SP){
-		System.out.print(ID+" "+OP+" "+SP);
+		if(SP.equals("verdadeiro") || SP.equals("falso"))
+			System.out.print(ID+" "+OP+" "+parseBool(SP));
+		else 
+			System.out.print(ID+" "+OP+" "+SP);
 	}
 }

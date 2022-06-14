@@ -113,6 +113,11 @@ public class PseudoCodeCompilerLexer extends Lexer {
 		public void throwError(String message, int line){
 			throw new RuntimeException(" "+message+" na linha: "+line);
 		}
+		
+		public void checkSC(String sc, int line){
+			if(sc.contains("missing"))throwError("Falta ';' linha:",line);
+			else x.printSC();
+		}
 
 
 	public PseudoCodeCompilerLexer(CharStream input) {

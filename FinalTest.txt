@@ -1,5 +1,4 @@
 inicio
-
 real teste = 3;
 boleano teste2 = verdadeiro;
 texto teste3 = "testes";
@@ -10,7 +9,7 @@ se(teste2 == verdadeiro){
 	teste = 4.5;
 }
 
-enquanto(teste3 == "testes"){
+enquanto(teste3 == "1"){
 	teste = teste++;
 	se(teste>=10){
 		teste3 = ler(texto);

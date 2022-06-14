@@ -23,6 +23,11 @@ grammar PseudoCodeCompiler;
 	public void throwError(String message, int line){
 		throw new RuntimeException(" "+message+" na linha: "+line);
 	}
+	
+	public void checkSC(String sc, int line){
+		if(sc.contains("missing"))throwError("Falta ';' linha:",line);
+		else x.printSC();
+	}
 }
 
 
@@ -42,7 +47,7 @@ whileLoop:
 forLoop: 
 		'para''('{x.printScopeTabs(scope);x.printData("for(");scope++;}
 		declaration
-		condition SC{x.printData(";");}
+		condition SC{checkSC($SC.text,$SC.line);}
 		op {x.printData($op.text);}
 		')''{' {x.printData("){\n");}
 		command
@@ -66,7 +71,7 @@ atribution:
 		| {x.printAttribution($ID.text,"");} read{
 				v.atribVar($ID.text,$read.text, scope, $read.start.getLine());
 		})
-		SC{x.printSC();}; 
+		SC{checkSC($SC.text,$SC.line);}; 
 		
 declaration:
 		type ID 
@@ -78,7 +83,7 @@ declaration:
 							throwError("Valor declarado nao corresponde ao tipo da variavel", $data.start.getLine());
 						}
 					}
-		SC{ x.printSC();};
+		SC{checkSC($SC.text,$SC.line);};
 		
 data:
 		bool|
@@ -112,7 +117,7 @@ op:
 basicOp:
 		('/'|'*') (op|data)
 		| ('+'|'-') (op|data)
-		| ('++'|'--');
+		| ('++'|'--') SC?;
 
 read:
 		'ler' '(' 
@@ -131,12 +136,12 @@ read:
 		}
 		')';
 
-write: 
+write:
 		{x.printScopeTabs(scope);} 
 		'imprimir' '(' {System.out.print("System.out.print(");}
 		(ID {x.printData(v.getVarById($ID.text).id);} | STRING {x.printData($STRING.text);})
 		('+' {x.printData("+");} (ID {x.printData(v.getVarById($ID.text).id);} | STRING {x.printData($STRING.text);}))* 
-		')' SC{x.printData(")");x.printSC();};
+		')' SC{x.printData(")");checkSC($SC.text,$SC.line);};
 		
 type: 
 		'boleano'|'texto'|'real';
